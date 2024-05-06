@@ -1,0 +1,31 @@
+name: build node app
+description: "builds the node application - the jedi way"
+runs:
+  using: "composite"
+  steps: 
+    - name: Restore Cache
+      id: cache
+      uses: actions/cache/restore@v3
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json')}}
+        restore-keys: |
+          ${{ runner.os }}-npm-
+    - name: Use Node.js 18.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18.x
+        cache: "npm"
+        cache-dependency-path: app/package-lock.json
+    - name: run build
+      working-directory: app/
+      shell: bash
+      run: |
+        npm ci
+        npm run build --if-present
+    - name: Save Cache
+      if: steps.cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v3
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json')}}
